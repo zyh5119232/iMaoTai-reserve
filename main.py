@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 import datetime
 import logging
 import sys
-
+import time
 import config
 import login
 import process
@@ -52,34 +53,41 @@ for section in configs.sections():
     process.TOKEN = token
     process.init_headers(user_id=userId, token=token, lng=lng, lat=lat)
     # 根据配置中，要预约的商品ID，城市 进行自动预约
-    try:
-        for item in config.ITEM_CODES:
-            max_shop_id = process.get_location_count(province=province,
-                                                     city=city,
-                                                     item_code=item,
-                                                     p_c_map=p_c_map,
-                                                     source_data=source_data,
-                                                     lat=lat,
-                                                     lng=lng)
-            # print(f'max shop id : {max_shop_id}')
-            if max_shop_id == '0':
-                continue
-            shop_info = source_data.get(str(max_shop_id))
-            title = config.ITEM_MAP.get(item)
-            shopInfo = f'商品:{title};门店:{shop_info["name"]}'
-            logging.info(shopInfo)
-            reservation_params = process.act_params(max_shop_id, item)
-            # 核心预约步骤
-            r_success, r_content = process.reservation(reservation_params, mobile)
-            # 为了防止漏掉推送异常，所有只要有一个异常，标题就显示失败
-            if not r_success:
-                s_title = '！！失败！！茅台预约'
-            s_content = s_content + r_content + shopInfo + "\n"
-            # 领取小茅运和耐力值
-            process.getUserEnergyAward(mobile)
-    except BaseException as e:
-        print(e)
-        logging.error(e)
+    while True:
+        now = datetime.datetime.now()
+        if now.hour == 15 and now.minute == 9:
+            try:
+                for item in config.ITEM_CODES:
+                    max_shop_id = process.get_location_count(province=province,
+                                                             city=city,
+                                                             item_code=item,
+                                                             p_c_map=p_c_map,
+                                                             source_data=source_data,
+                                                             lat=lat,
+                                                             lng=lng)
+                    # print(f'max shop id : {max_shop_id}')
+                    if max_shop_id == '0':
+                        continue
+                    shop_info = source_data.get(str(max_shop_id))
+                    title = config.ITEM_MAP.get(item)
+                    shopInfo = f'商品:{title};门店:{shop_info["name"]}'
+                    logging.info(shopInfo)
+                    reservation_params = process.act_params(max_shop_id, item)
+                    # 核心预约步骤
+                    r_success, r_content = process.reservation(reservation_params, mobile)
+                    # 为了防止漏掉推送异常，所有只要有一个异常，标题就显示失败
+                    if not r_success:
+                        s_title = '！！失败！！茅台预约'
+                    s_content = s_content + r_content + shopInfo + "\n"
+                    # 领取小茅运和耐力值
+                    process.getUserEnergyAward(mobile)
+            except BaseException as e:
+                print(e)
+                logging.error(e)
+            time .sleep(24*60*60-30)
+        else:
+            # print("等待中")
+            time.sleep(30)
 
 # 推送消息
 process.send_msg(s_title, s_content)
