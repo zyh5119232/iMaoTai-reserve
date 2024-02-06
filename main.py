@@ -55,7 +55,7 @@ for section in configs.sections():
     # 根据配置中，要预约的商品ID，城市 进行自动预约
     while True:
         now = datetime.datetime.now()
-        if now.hour == 15 and now.minute == 9:
+        if now.hour == 9 and now.minute == 0:
             try:
                 for item in config.ITEM_CODES:
                     max_shop_id = process.get_location_count(province=province,
@@ -86,7 +86,7 @@ for section in configs.sections():
                 logging.error(e)
             time .sleep(24*60*60-30)
         else:
-            # print("等待中")
+            print("等待中")
             time.sleep(30)
 
 # 推送消息
